@@ -106,3 +106,66 @@ de su agrado o composición. Se valorará la riqueza instrumental, su modelado y
 >
 > No olvide escuchar el resultado generado y comprobar que no se producen ruidos extraños o distorsiones.
 > Sobre todo, tenga en cuenta la salud auditiva de quien será encargado de corregir su trabajo.
+
+---
+
+## Documentación del Sistema Modular de Tablas de Onda (Wavetable Instrument)
+
+Se ha implementado un nuevo sistema modular que permite cargar y sintetizar sonidos a partir de ficheros de texto externos, sin necesidad de recompilar el código C++ para cada nuevo instrumento.
+
+### 1. Arquitectura
+El sistema consta de dos componentes principales:
+*   **`WavetableLoader` (Singleton):** Gestiona la carga de ficheros `.wtb` en memoria. Implementa una caché para asegurar que, si múltiples instrumentos usan la misma tabla de ondas, esta solo se carga una vez en RAM.
+*   **`InstrumentWavetable`:** Una clase de instrumento genérica que utiliza el *Loader* para obtener los datos y realiza la síntesis interpolada aplicando una envolvente ADSR.
+
+### 2. Formato de Ficheros de Onda (.wtb)
+Los ficheros de tabla de onda son simples archivos de texto que contienen muestras de **un ciclo** de la señal, separadas por espacios o saltos de línea. Los valores deben estar normalizados (preferiblemente entre -1.0 y 1.0).
+
+**Ejemplo (`sine.wtb`):**
+```text
+0.0 0.707 1.0 0.707 0.0 -0.707 -1.0 -0.707
+```
+
+### 3. Configuración en la Orquesta (.orc)
+Para usar este instrumento, regístrelo en su fichero `.orc` usando el nombre `InstrumentWavetable`. Debe proporcionar obligatoriamente el parámetro `file` con la ruta al fichero `.wtb`.
+
+**Parámetros disponibles:**
+*   `file`: Ruta al fichero de muestras (e.g., `work/sine.wtb`).
+*   `ADSR_A`: Tiempo de ataque (segundos).
+*   `ADSR_D`: Tiempo de caída (segundos).
+*   `ADSR_S`: Nivel de sostenimiento (0.0 a 1.0).
+*   `ADSR_R`: Tiempo de liberación (segundos).
+
+**Ejemplo (`banda.orc`):**
+```text
+# Canal 1: Flauta (usando una onda senoidal suave)
+1 InstrumentWavetable file=work/sine.wtb;ADSR_A=0.1;ADSR_D=0.1;ADSR_S=0.9;ADSR_R=0.2
+
+# Canal 2: Bajo (usando una onda cuadrada o pulso)
+2 InstrumentWavetable file=work/pulse.wtb;ADSR_A=0.01;ADSR_D=0.05;ADSR_S=0.8;ADSR_R=0.1
+```
+
+### 4. Partituras (.sco)
+El formato de la partitura utiliza **Ticks** para el tiempo.
+*   Por defecto: 120 BPM y 120 Ticks/Beat => **1 Segundo = 240 Ticks**.
+*   La primera columna es el tiempo de espera (Delta Time) desde el evento anterior.
+
+**Ejemplo (`cancion.sco`):**
+```text
+# Time  Cmd  Chan  Note  Vel
+0       9    1     60    100   ; Empieza Nota C4 en Canal 1
+0       9    2     36    80    ; Empieza Nota C2 en Canal 2 (Bajo) simultáneamente
+240     8    1     60    0     ; Para Canal 1 tras 1 segundo
+0       8    2     36    0     ; Para Canal 2 inmediatamente después
+```
+
+### 5. Compilación y Ejecución
+Para compilar el proyecto con estas nuevas funcionalidades:
+```bash
+make release
+```
+
+Para ejecutar una prueba:
+```bash
+./bin/synth work/banda.orc work/cancion.sco work/salida.wav
+```

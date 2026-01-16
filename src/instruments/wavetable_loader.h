@@ -1,26 +1,24 @@
-#include <iostream>
-#include <fstream>
+#ifndef WAVETABLE_LOADER_H
+#define WAVETABLE_LOADER_H
+
+#include <string>
 #include <vector>
+#include <map>
 
-using namespace std;
-
-namespace Utils {
-
-    vector<float> load_wavetable(std::string filename) {
-        //load from .wtb file to a vector of floats
-        vector<float> wavetable;
+namespace upc {
+    class WavetableLoader {
+    private:
+        std::map<std::string, std::vector<float>> cache;
+        WavetableLoader() {}
         
-        //the .wtb file is a text file with floats separated by spaces
-        ifstream file(filename);
-        if (!file.is_open()) {
-            cerr << "Error: Could not open wavetable file " << filename << endl;
-            return wavetable;
-        }
-        float value;
-        while (file >> value) {
-            wavetable.push_back(value);
-        }
-        file.close();
-        return wavetable;
-    }
+    public:
+        // Singleton access
+        static WavetableLoader& getInstance();
+        
+        // Load a wavetable from a file (or return cached version)
+        // Returns a pointer to the vector, or nullptr/empty vector on failure
+        const std::vector<float>* load(const std::string& filename);
+    };
 }
+
+#endif
