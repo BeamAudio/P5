@@ -1,6 +1,7 @@
 #include <iostream>
 #include "instrument_dumb.h"
 #include "instrument_wavetable.h"
+#include "instrument_fm.h"
 
 /*
   For each new instrument:
@@ -21,6 +22,9 @@ namespace upc {
     }
     else if (name == "InstrumentWavetable") {
       pInst = (Instrument *) new InstrumentWavetable(parameters);
+    }
+    else if (name == "InstrumentFM") {
+      pInst = (Instrument *) new InstrumentFM(parameters);
     }
     return pInst;
   }

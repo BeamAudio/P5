@@ -3,6 +3,7 @@
 sources = [
 	'instruments/instrument.cpp',
 	'instruments/instrument_dumb.cpp',
+	'instruments/instrument_fm.cpp',
 	'instruments/instrument_wavetable.cpp',
 	'instruments/wavetable_loader.cpp',
 	'synth/envelope_adsr.cpp',
